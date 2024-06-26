@@ -85,21 +85,40 @@ void Boid::checkEdges() {
     }
 }
 
-sf::Vector2f Boid::align(const std::vector<Boid>& boids) {
-    const float perceptionRadius = 100;
-    sf::Vector2f steering = {0,0};
-    float total = 0;
+void Boid::updateNeighbours(const std::vector<Boid>& boids) {
+    const float perceptionRadiusAlg = 100;
+    const float perceptionRadiusCoh = 100;
+    const float perceptionRadiusSep = 50;
+    m_totalVel = {0,0};
+    m_totalPos = {0,0};
+    m_totalSep = {0,0};
+    m_totalAlgNeighbours = 0;
+    m_totalCohNeighbours = 0;
+    m_totalSepNeighbours = 0;
+
     for(auto other : boids) {
         if (other.getId() == m_id) continue;
         float dist = calculateDistance(m_position, other.getPosition());
-        if (dist < perceptionRadius) {
-            steering += other.getVelocity();
-            total++;
+        if (dist < perceptionRadiusAlg) {
+            m_totalVel += other.getVelocity();
+            m_totalAlgNeighbours++;
+        }
+        if (dist < perceptionRadiusCoh) {
+            m_totalPos += other.getPosition();
+            m_totalCohNeighbours++;
+        }
+        if (dist < perceptionRadiusSep) {
+            m_totalSep += (m_position - other.getPosition()) / (dist * dist);
+            m_totalSepNeighbours++;
         }
     }
+}
 
-    if(total > 0) {
-        steering /= total;
+sf::Vector2f Boid::align(const std::vector<Boid>& boids) {
+    sf::Vector2f steering = {0,0};
+
+    if(m_totalAlgNeighbours > 0) {
+        steering = m_totalVel / m_totalAlgNeighbours;
         setMagnitude(steering, m_maxSpeed);
         steering -= m_velocity;
         setMaxMagnitude(steering, m_maxForce);
@@ -109,21 +128,10 @@ sf::Vector2f Boid::align(const std::vector<Boid>& boids) {
 }
 
 sf::Vector2f Boid::cohesion(const std::vector<Boid>& boids) {
-    const float perceptionRadius = 100;
     sf::Vector2f steering = {0,0};
-    float total = 0;
-    for(auto other : boids) {
-        if (other.getId() == m_id) continue;
-        sf::Vector2f otherPos = other.getPosition();
-        float dist = calculateDistance(m_position, otherPos);
-        if (dist < perceptionRadius) {
-            steering += otherPos;
-            total++;
-        }
-    }
 
-    if(total > 0) {
-        steering /= total;
+    if(m_totalCohNeighbours > 0) {
+        steering = m_totalPos / m_totalCohNeighbours;
         steering -= m_position;
         setMagnitude(steering, m_maxSpeed);
         steering -= m_velocity;
@@ -134,21 +142,10 @@ sf::Vector2f Boid::cohesion(const std::vector<Boid>& boids) {
 }
 
 sf::Vector2f Boid::separation(const std::vector<Boid>& boids) {
-    const float perceptionRadius = 50;
     sf::Vector2f steering = {0,0};
-    float total = 0;
-    for(auto other : boids) {
-        if (other.getId() == m_id) continue;
-        sf::Vector2f otherPos = other.getPosition();
-        float dist = calculateDistance(m_position, otherPos);
-        if (dist < perceptionRadius) {
-            steering += (m_position - otherPos) / (dist * dist);
-            total++;
-        }
-    }
 
-    if(total > 0) {
-        steering /= total;
+    if(m_totalSepNeighbours > 0) {
+        steering = m_totalSep / m_totalSepNeighbours;
         setMagnitude(steering, m_maxSpeed);
         steering -= m_velocity;
         setMaxMagnitude(steering, m_maxForce);
@@ -177,6 +174,7 @@ void Boid::setAcceleration(sf::Vector2f acc)
 }
 
 void Boid::flock(const std::vector<Boid>& boids) {
+    updateNeighbours(boids);
     m_acceleration = {0,0};
     m_acceleration += align(boids);
     m_acceleration += cohesion(boids);

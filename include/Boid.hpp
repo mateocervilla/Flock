@@ -11,9 +11,17 @@ private:
     sf::Vector2f m_velocity;
     sf::Vector2f m_acceleration;
 
+    sf::Vector2f m_totalPos;
+    sf::Vector2f m_totalVel;
+    sf::Vector2f m_totalSep;
+    float m_totalAlgNeighbours;
+    float m_totalCohNeighbours;
+    float m_totalSepNeighbours;
+
     sf::CircleShape m_boidShape;
     sf::Vector2f m_screenSize;
 
+    void updateNeighbours(const std::vector<Boid>& boids);
     sf::Vector2f align(const std::vector<Boid>& boids);
     sf::Vector2f cohesion(const std::vector<Boid>& boids);
     sf::Vector2f separation(const std::vector<Boid>& boids);
