@@ -31,7 +31,6 @@ Boid::Boid(size_t id, sf::Vector2f screenSize)
     std::uniform_real_distribution<float> randPosX(0, 1800);
     std::uniform_real_distribution<float> randPosY(0, 800);
     std::uniform_real_distribution<float> randVel(-5, 5);
-    // std::uniform_real_distribution<float> disY(0, 20);
 
     // Initial position
     m_position = {randPosX(gen),randPosY(gen)};
@@ -114,7 +113,7 @@ void Boid::updateNeighbours(const std::vector<Boid>& boids) {
     }
 }
 
-sf::Vector2f Boid::align(const std::vector<Boid>& boids) {
+sf::Vector2f Boid::align() {
     sf::Vector2f steering = {0,0};
 
     if(m_totalAlgNeighbours > 0) {
@@ -127,7 +126,7 @@ sf::Vector2f Boid::align(const std::vector<Boid>& boids) {
     return steering;
 }
 
-sf::Vector2f Boid::cohesion(const std::vector<Boid>& boids) {
+sf::Vector2f Boid::cohesion() {
     sf::Vector2f steering = {0,0};
 
     if(m_totalCohNeighbours > 0) {
@@ -141,7 +140,7 @@ sf::Vector2f Boid::cohesion(const std::vector<Boid>& boids) {
     return steering;
 }
 
-sf::Vector2f Boid::separation(const std::vector<Boid>& boids) {
+sf::Vector2f Boid::separation() {
     sf::Vector2f steering = {0,0};
 
     if(m_totalSepNeighbours > 0) {
@@ -176,7 +175,7 @@ void Boid::setAcceleration(sf::Vector2f acc)
 void Boid::flock(const std::vector<Boid>& boids) {
     updateNeighbours(boids);
     m_acceleration = {0,0};
-    m_acceleration += align(boids);
-    m_acceleration += cohesion(boids);
-    m_acceleration += 1.2f * separation(boids);
+    m_acceleration += align();
+    m_acceleration += cohesion();
+    m_acceleration += 1.2f * separation();
 }

@@ -22,9 +22,9 @@ private:
     sf::Vector2f m_screenSize;
 
     void updateNeighbours(const std::vector<Boid>& boids);
-    sf::Vector2f align(const std::vector<Boid>& boids);
-    sf::Vector2f cohesion(const std::vector<Boid>& boids);
-    sf::Vector2f separation(const std::vector<Boid>& boids);
+    sf::Vector2f align();
+    sf::Vector2f cohesion();
+    sf::Vector2f separation();
     void checkEdges();
 
     float m_maxForce;
