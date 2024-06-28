@@ -1,4 +1,4 @@
-# 3D Flock
+# Flock
 A simple C++ + SFML Flocking simulator
 
 ![3dFlock](https://github.com/mateocervilla/3DFlock/assets/68401037/319ee0c3-08a6-42e3-bad9-6b9151b85b2c)
