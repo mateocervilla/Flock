@@ -2,6 +2,7 @@
 
 #include <random>
 #include <iostream>
+#include <numeric>
 
 #define RADIUS 2.5f
 
@@ -16,7 +17,13 @@ float calculateDistance(const sf::Vector2f& point1, const sf::Vector2f& point2) 
 }
 
 Boid::Boid(size_t id, sf::Vector2f screenSize)
-: m_id(id), m_screenSize(screenSize)
+: m_id(id), m_screenSize(screenSize),
+m_maxForce(1),
+m_maxSpeed(3),
+m_perceptionRadiusAlg(50),
+m_perceptionRadiusCoh(50),
+m_perceptionRadiusSep(25),
+m_maxRadius(std::max(std::max(m_perceptionRadiusAlg, m_perceptionRadiusCoh),m_perceptionRadiusSep))
 {
     // Shape props
     m_boidShape.setOrigin(RADIUS/2,RADIUS/2);
@@ -34,9 +41,6 @@ Boid::Boid(size_t id, sf::Vector2f screenSize)
 
     // Initial position
     m_position = {randPosX(gen),randPosY(gen)};
-
-    m_maxForce = 1;
-    m_maxSpeed = 4;
     m_velocity = {randVel(gen),randVel(gen)};
     m_acceleration = {0,0};
 }
@@ -56,19 +60,24 @@ void Boid::draw(sf::RenderTarget& window, sf::RenderStates states) const {
     window.draw(m_boidShape);
 }
 
-size_t Boid::getId()
+size_t Boid::getId() const
 {
     return m_id;
 }
 
-sf::Vector2f Boid::getPosition()
+sf::Vector2f Boid::getPosition() const
 {
     return m_position;
 }
 
-sf::Vector2f Boid::getVelocity()
+sf::Vector2f Boid::getVelocity() const
 {
     return m_velocity;
+}
+
+float Boid::getMaxRadius() const
+{
+    return m_maxRadius;
 }
 
 void Boid::checkEdges() {
@@ -84,10 +93,7 @@ void Boid::checkEdges() {
     }
 }
 
-void Boid::updateNeighbours(const std::vector<Boid>& boids) {
-    const float perceptionRadiusAlg = 100;
-    const float perceptionRadiusCoh = 100;
-    const float perceptionRadiusSep = 50;
+void Boid::updateNeighbours(const std::vector<Boid>& boids, const std::vector<size_t>& ids) {
     m_totalVel = {0,0};
     m_totalPos = {0,0};
     m_totalSep = {0,0};
@@ -95,19 +101,19 @@ void Boid::updateNeighbours(const std::vector<Boid>& boids) {
     m_totalCohNeighbours = 0;
     m_totalSepNeighbours = 0;
 
-    for(auto other : boids) {
-        if (other.getId() == m_id) continue;
-        float dist = calculateDistance(m_position, other.getPosition());
-        if (dist < perceptionRadiusAlg) {
-            m_totalVel += other.getVelocity();
+    for(const auto id : ids) {
+        if (id == m_id) continue;
+        float dist = calculateDistance(m_position, boids[id].getPosition());
+        if (dist < m_perceptionRadiusAlg) {
+            m_totalVel += boids[id].getVelocity();
             m_totalAlgNeighbours++;
         }
-        if (dist < perceptionRadiusCoh) {
-            m_totalPos += other.getPosition();
+        if (dist < m_perceptionRadiusCoh) {
+            m_totalPos += boids[id].getPosition();
             m_totalCohNeighbours++;
         }
-        if (dist < perceptionRadiusSep) {
-            m_totalSep += (m_position - other.getPosition()) / (dist * dist);
+        if (dist < m_perceptionRadiusSep) {
+            m_totalSep += (m_position - boids[id].getPosition()) / (dist * dist);
             m_totalSepNeighbours++;
         }
     }
@@ -172,10 +178,22 @@ void Boid::setAcceleration(sf::Vector2f acc)
     setMaxMagnitude(m_acceleration, m_maxForce);
 }
 
-void Boid::flock(const std::vector<Boid>& boids) {
-    updateNeighbours(boids);
+void Boid::flockInt(const std::vector<Boid>& boids, const std::vector<size_t>& ids) {
+    updateNeighbours(boids, ids);
     m_acceleration = {0,0};
     m_acceleration += align();
     m_acceleration += cohesion();
     m_acceleration += 1.2f * separation();
+}
+
+void Boid::flock(const std::vector<Boid>& boids, const std::vector<size_t>& ids) {
+    if(!ids.empty()){
+        flockInt(boids, ids);
+    }
+}
+
+void Boid::flock(const std::vector<Boid>& boids) {
+    std::vector<size_t> ids(boids.size());
+    std::iota(std::begin(ids), std::end(ids), 0);
+    flockInt(boids, ids);
 }

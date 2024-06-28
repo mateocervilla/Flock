@@ -14,21 +14,21 @@ Rectangle::Rectangle(sf::Vector2f position, sf::Vector2f size)
 
 Rectangle::~Rectangle(){}
 
-bool Rectangle::contains(sf::Vector2f point) {
+bool Rectangle::contains(const sf::Vector2f& point) const {
     return (point.x >= m_position.x - m_size.x / 2  &&
             point.x < m_position.x + m_size.x / 2 &&
             point.y >= m_position.y - m_size.y / 2 &&
             point.y < m_position.y + m_size.y / 2);
 }
 
-bool Rectangle::intersects(Rectangle rect) {
+bool Rectangle::intersects(const Rectangle& rect) const {
     return !(rect.getPosition().x - rect.getSize().x > m_position.x + m_size.x ||
              rect.getPosition().x + rect.getSize().x < m_position.x - m_size.x ||
              rect.getPosition().y - rect.getSize().y > m_position.y + m_size.y ||
              rect.getPosition().y + rect.getSize().y < m_position.y - m_size.y);
 }
 
-bool Rectangle::intersects(Circle circle) {
+bool Rectangle::intersects(const Circle& circle) const {
     // Calculate the half dimensions of the rectangle
     float halfWidth = m_size.x / 2.0f;
     float halfHeight = m_size.y / 2.0f;
@@ -59,7 +59,7 @@ Circle::Circle(sf::Vector2f position, float radius)
 
 Circle::~Circle(){}
 
-bool Circle::contains(sf::Vector2f point) {
+bool Circle::contains(const sf::Vector2f& point) const {
     float distance = std::sqrt(std::pow(point.x - m_position.x, 2) + std::pow(point.y - m_position.y, 2));
     // Check if the distance is less than or equal to the radius
     return distance <= m_radius;
@@ -82,13 +82,13 @@ void QuadTree::subdivide() {
     const float y = m_boundary.getPosition().y;
     const float w = m_boundary.getSize().x;
     const float h = m_boundary.getSize().y;
-    Rectangle ne = Rectangle({x + w / 4, y - h / 4}, {w / 2, h / 2});
+    const Rectangle ne = Rectangle({x + w / 4, y - h / 4}, {w / 2, h / 2});
     m_northeast = std::make_unique<QuadTree>(ne, m_capacity);
-    Rectangle nw = Rectangle({x - w / 4, y - h / 4}, {w / 2, h / 2});
+    const Rectangle nw = Rectangle({x - w / 4, y - h / 4}, {w / 2, h / 2});
     m_northwest = std::make_unique<QuadTree>(nw, m_capacity);
-    Rectangle se = Rectangle({x + w / 4, y + h / 4}, {w / 2, h / 2});
+    const Rectangle se = Rectangle({x + w / 4, y + h / 4}, {w / 2, h / 2});
     m_southeast = std::make_unique<QuadTree>(se, m_capacity);
-    Rectangle sw = Rectangle({x - w / 4, y + h / 4}, {w / 2, h / 2});
+    const Rectangle sw = Rectangle({x - w / 4, y + h / 4}, {w / 2, h / 2});
     m_southwest = std::make_unique<QuadTree>(sw, m_capacity);
     m_divided = true;
 }
@@ -102,7 +102,7 @@ bool QuadTree::insert(sf::Vector2f point, size_t index) {
     if (m_boidPoints.size() < m_capacity) {
         m_boidPoints.push_back({point, index});
         return true;
-    } 
+    }
     else {
         if (!m_divided) {
             subdivide();
@@ -120,25 +120,22 @@ bool QuadTree::insert(sf::Vector2f point, size_t index) {
     return false;
 }
 
-void QuadTree::query(Circle range, std::vector<size_t>& found) {
+void QuadTree::query(const Circle& range, const size_t id, std::vector<size_t>& found) {
     if (!m_boundary.intersects(range)) {
       return;
     }
-    else {
-        for (auto p : m_boidPoints) {
-            if (range.contains(p.position)) {
-                found.push_back(p.id);
-            }
-        }
-        if (m_divided) {
-            m_northwest->query(range, found);
-            m_northeast->query(range, found);
-            m_southwest->query(range, found);
-            m_southeast->query(range, found);
+    for (const auto& p : m_boidPoints) {
+        if (p.id != id && range.contains(p.position)) {
+            found.push_back(p.id);
         }
     }
+    if (m_divided) {
+        m_northwest->query(range, id, found);
+        m_northeast->query(range, id, found);
+        m_southwest->query(range, id, found);
+        m_southeast->query(range, id, found);
+    }
 }
-
 
 void QuadTree::draw(sf::RenderTarget& window, sf::RenderStates states) const {
     m_boundary.draw(window);

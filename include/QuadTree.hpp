@@ -21,7 +21,7 @@ public:
     float getRadius() const {return m_radius;}
     void draw(sf::RenderTarget& window, sf::RenderStates states = sf::RenderStates::Default) const override;
 
-    bool contains(sf::Vector2f point);
+    bool contains(const sf::Vector2f& point) const;
 };
 
 class Rectangle : public sf::Drawable {
@@ -37,9 +37,9 @@ public:
     sf::Vector2f getSize() const {return m_size;}
     void draw(sf::RenderTarget& window, sf::RenderStates states = sf::RenderStates::Default) const override;
 
-    bool intersects(Rectangle rect);
-    bool intersects(Circle circle);
-    bool contains(sf::Vector2f point);
+    bool intersects(const Rectangle& rect) const;
+    bool intersects(const Circle& circle) const;
+    bool contains(const sf::Vector2f& point) const;
 };
 
 class QuadTree : public sf::Drawable {
@@ -62,6 +62,6 @@ public:
 
     void subdivide();
     bool insert(sf::Vector2f point, size_t index);
-    void query(Circle range, std::vector<size_t>& found);
+    void query(const Circle& range, const size_t id, std::vector<size_t>& found);
     void draw(sf::RenderTarget& window, sf::RenderStates states = sf::RenderStates::Default) const override;
 };

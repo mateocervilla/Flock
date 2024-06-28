@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Boid.hpp"
+#include "QuadTree.hpp"
 
 constexpr float WIDTH = 1800;
 constexpr float HEIGHT = 800;

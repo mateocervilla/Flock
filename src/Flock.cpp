@@ -27,7 +27,7 @@ void Flock::initWindow() {
 }
 
 void Flock::initEnviroment() {
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < 1000; i++) {
         m_boids.push_back(Boid(i, {WIDTH, HEIGHT}));
     }
 }
@@ -35,10 +35,25 @@ void Flock::initEnviroment() {
 void Flock::update() {
     pollEvents();
 
+#if 1   // Use QuadTrees
+    QuadTree *qtree = new QuadTree({sf::Vector2f(WIDTH/2, HEIGHT/2), sf::Vector2f(WIDTH , HEIGHT)}, 4);
+    for(int b = 0; b < m_boids.size(); b++) {
+        qtree->insert(m_boids[b].getPosition(), m_boids[b].getId());
+    }
+    for(int b = 0; b < m_boids.size(); b++) {
+        std::vector<size_t> found;
+        qtree->query({m_boids[b].getPosition(), m_boids[b].getMaxRadius()}, m_boids[b].getId(), found);
+        if(!found.empty()) {
+            m_boids[b].flock(m_boids, found);
+        }
+        m_boids[b].update();
+    }
+#else
     for(int b = 0; b < m_boids.size(); b++) {
         m_boids[b].flock(m_boids);
         m_boids[b].update();
     }
+#endif
 }
 
 void Flock::render() {
