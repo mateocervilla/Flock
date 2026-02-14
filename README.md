@@ -9,36 +9,34 @@ A simple C++ + SFML Flocking simulator
 * [Run](#run)
 
 ## Requirements
-In order to build this project, you need the following dependencies:
-* gcc
-  * For Windows, use the MinGW compiler provided by SFML: [WinLibs MSVCRT 13.1.0 (64-bit)](https://github.com/brechtsanders/winlibs_mingw/releases/download/13.1.0-16.0.5-11.0.0-msvcrt-r5/winlibs-x86_64-posix-seh-gcc-13.1.0-mingw-w64msvcrt-11.0.0-r5.7z)
-* make
-* cmake
-  * [Windows](https://cmake.org/download/)
-* SFML 2.6.1
-  * [Linux](https://www.sfml-dev.org/files/SFML-2.6.1-linux-gcc-64-bit.tar.gz)
-  * [Windows](https://www.sfml-dev.org/files/SFML-2.6.1-windows-gcc-13.1.0-mingw-64-bit.zip)
 
-Static linking libraries:
-* Linux:
-  * X11
-    * `sudo apt-get install x11-xserver-utils`
-  * Xrandr
-    * `sudo apt-get install libxrandr-dev`
-  * Xcursor
-    * `sudo apt-get install libxcursor-dev`
-  * udev
-    * `sudo apt-get install libudev-dev`
+This project uses **Conan** to manage all C++ dependencies.
 
-* Windows (come with Windows by default):
-  * opengl32
-  * winmm
-  * gdi32
+You only need:
+
+- **C++ compiler**
+  - Linux: `gcc` or `clang`
+  - Windows: MinGW or MSVC
+- **CMake ≥ 3.15**
+- **Conan ≥ 2.0**
+- **Make** (Linux) or a supported build system
+
+## Configure Conan profile (first time only)
+```bash
+conan profile detect --force
+```
 
 ## Build
-* `cmake . -DSFML_PATH="path/path/to/sfml"`
-> To build with shared libraries add -DSHARED=ON
-* `make`
+Static build (default)
+```bash
+conan build . --build=missing
+```
+
+Shared build
+```bash
+conan build . -o shared=True --build=missing
+```
 
 ## Run
+From the build directory:
 * `./Flock` or double click on the icon.
